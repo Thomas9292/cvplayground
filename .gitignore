@@ -52,3 +52,9 @@ docs/_build/
 # Vscode workspace
 *.code-workspace
 .vscode/
+
+# Virtual environment
+env/
+
+# Pylint config file
+*.pylintrc

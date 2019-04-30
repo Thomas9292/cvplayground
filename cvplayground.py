@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 import os
 import cv2
-from flask import Flask, render_template, url_for, Response
+from flask import Flask, render_template, url_for, Response, request
+from face_detection import face_detection
 
 app = Flask(__name__)
 
@@ -11,21 +12,27 @@ def hello():
     return render_template('home.html')
 
 
-def get_webcam(mirror=True):
+def get_webcam(mirror=True, check_faces=True):
     '''
     Creates open-cv VideoCapture object and encodes it as bytestring
     '''
-    webcam = cv2.VideoCapture(0)
+    camera = cv2.VideoCapture(0)
 
     while True:
-        _, image = webcam.read()
+        _, image = camera.read()
         if mirror:
             image = cv2.flip(image, 1)
+        
+        if check_faces:
+            faces = face_detection(image)
+            for (x, y, w, h) in faces:
+                cv2.rectangle(image, (x, y), (x+w, y+h), (255, 100, 100), 2)
+
         jpg_image = cv2.imencode('.jpg', image)[1]
         image_string = jpg_image.tostring()
         yield b'--frame\r\n' b'Content-Type: text/plain\r\n\r\n' + image_string + b'\r\n'
 
-    del webcam
+    del camera
 
 
 @app.route("/webcam")
