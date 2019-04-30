@@ -1,5 +1,7 @@
+#!/usr/bin/env python3
 import os
-from flask import Flask, render_template, url_for
+import cv2
+from flask import Flask, render_template, url_for, Response
 
 app = Flask(__name__)
 
@@ -7,6 +9,31 @@ app = Flask(__name__)
 @app.route("/")
 def hello():
     return render_template('home.html')
+
+
+def get_webcam(mirror=True):
+    '''
+    Creates open-cv VideoCapture object and encodes it as bytestring
+    '''
+    webcam = cv2.VideoCapture(0)
+
+    while True:
+        _, image = webcam.read()
+        if mirror:
+            image = cv2.flip(image, 1)
+        jpg_image = cv2.imencode('.jpg', image)[1]
+        image_string = jpg_image.tostring()
+        yield b'--frame\r\n' b'Content-Type: text/plain\r\n\r\n' + image_string + b'\r\n'
+
+    del webcam
+
+
+@app.route("/webcam")
+def webcam():
+    '''
+    Calls the get_webcam function and returns the response to fill img in home.html
+    '''
+    return Response(get_webcam(), mimetype='multipart/x-mixed-replace; boundary=frame')
 
 
 @app.context_processor
@@ -32,4 +59,4 @@ def dated_url_for(endpoint, **values):
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, threaded=True)
