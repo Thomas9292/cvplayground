@@ -1,7 +1,7 @@
 import cv2
 
 
-def face_detection(image):
+def haar_face_detection(image):
     gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
     face_cascade = cv2.CascadeClassifier(

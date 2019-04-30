@@ -2,19 +2,24 @@
 import os
 import cv2
 from flask import Flask, render_template, url_for, Response, request
-from face_detection import face_detection
+from face_detection import haar_face_detection
 
 app = Flask(__name__)
 
 
 @app.route("/")
-def hello():
-    return render_template('home.html')
+def home_page():
+    return render_template('webcam.html')
+
+@app.route("/face_recognition")
+def face_recognition_page():
+    return render_template('face_recognition.html')
 
 
 def get_webcam(mirror=True, check_faces=True):
     '''
     Creates open-cv VideoCapture object and encodes it as bytestring
+    if check_faces is true, opencv is used to detect faces and add rectangles
     '''
     camera = cv2.VideoCapture(0)
 
@@ -24,7 +29,7 @@ def get_webcam(mirror=True, check_faces=True):
             image = cv2.flip(image, 1)
         
         if check_faces:
-            faces = face_detection(image)
+            faces = haar_face_detection(image)
             for (x, y, w, h) in faces:
                 cv2.rectangle(image, (x, y), (x+w, y+h), (255, 100, 100), 2)
 
@@ -40,7 +45,12 @@ def webcam():
     '''
     Calls the get_webcam function and returns the response to fill img in home.html
     '''
-    return Response(get_webcam(), mimetype='multipart/x-mixed-replace; boundary=frame')
+    return Response(get_webcam(check_faces=False), mimetype='multipart/x-mixed-replace; boundary=frame')
+
+
+@app.route("/webcam_with_face_detect")
+def webcam_with_face_detect():
+    return Response(get_webcam(check_faces=True), mimetype='multipart/x-mixed-replace; boundary=frame')
 
 
 @app.context_processor

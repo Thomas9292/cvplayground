@@ -11,16 +11,14 @@
 <div id="container">
     <div id="header">
         <h1>Computer Vision Playground</h1>
+        <ul>
+            <li><a href="{{ url_for('home_page')}}" title="Normal webcam">Webcam</a></li>
+            <li><a href="{{ url_for('face_recognition_page')}}" title="Haarcascades opencv face detection">Face detection</a></li>
+        </ul>
     </div>
 
     <div id="body">
-        <img src="{{ url_for('webcam') }}">
-        <!-- <h1>{{ url_for('webcam') }}</h1> -->
-        <div class="checkbox">
-            <label>
-                <input type="checkbox" name="check" value="edit"> Check for faces
-            </label>
-        </div>
+        {% block content %}{% endblock %}
     </div>
 
     <div id="footer">
