@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
 import os
-import cv2
-from flask import Flask, render_template, url_for, Response, request
-from face_detection import haar_face_detection
+from flask import Flask, render_template, url_for, Response
+from face_detection import get_stream
 
 app = Flask(__name__)
 
@@ -11,46 +10,41 @@ app = Flask(__name__)
 def home_page():
     return render_template('webcam.html')
 
-@app.route("/face_recognition")
-def face_recognition_page():
-    return render_template('face_recognition.html')
+
+@app.route("/haar_face_recognition")
+def haar_face_recognition_page():
+    return render_template('haar_face_recognition.html')
 
 
-def get_webcam(mirror=True, check_faces=True):
-    '''
-    Creates open-cv VideoCapture object and encodes it as bytestring
-    if check_faces is true, opencv is used to detect faces and add rectangles
-    '''
-    camera = cv2.VideoCapture(0)
-
-    while True:
-        _, image = camera.read()
-        if mirror:
-            image = cv2.flip(image, 1)
-        
-        if check_faces:
-            faces = haar_face_detection(image)
-            for (x, y, w, h) in faces:
-                cv2.rectangle(image, (x, y), (x+w, y+h), (255, 100, 100), 2)
-
-        jpg_image = cv2.imencode('.jpg', image)[1]
-        image_string = jpg_image.tostring()
-        yield b'--frame\r\n' b'Content-Type: text/plain\r\n\r\n' + image_string + b'\r\n'
-
-    del camera
+@app.route("/lbp_face_recognition")
+def lbp_face_recognition_page():
+    return render_template('lbp_face_recognition.html')
 
 
 @app.route("/webcam")
 def webcam():
     '''
-    Calls the get_webcam function and returns the response to fill img in home.html
+    Calls the get_stream function and returns the response to fill img in home.html
     '''
-    return Response(get_webcam(check_faces=False), mimetype='multipart/x-mixed-replace; boundary=frame')
+    return Response(get_stream(check_faces=False), mimetype='multipart/x-mixed-replace; boundary=frame')
 
 
-@app.route("/webcam_with_face_detect")
-def webcam_with_face_detect():
-    return Response(get_webcam(check_faces=True), mimetype='multipart/x-mixed-replace; boundary=frame')
+@app.route("/haar_face_detect")
+def webcam_with_haar_face_detect():
+    '''
+    Calls the get_stream function and returns the response with face detection to
+    fill img in face_recognition.html
+    '''
+    return Response(get_stream(check_faces='haar'), mimetype='multipart/x-mixed-replace; boundary=frame')
+
+
+@app.route("/lbp_face_detect")
+def webcam_with_lbp_face_detect():
+    '''
+    Calls the get_stream function and returns the response with face detection to
+    fill img in face_recognition.html
+    '''
+    return Response(get_stream(check_faces='lbp'), mimetype='multipart/x-mixed-replace; boundary=frame')
 
 
 @app.context_processor
